@@ -1,62 +1,193 @@
+
 package dao;
 
 import conexion.Conexion;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Date;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import modelo.SaldoCuenta;
 
 public class BalanceGeneralDAO {
 
-    public void mostrarBalance() {
+    public List<SaldoCuenta> obtenerBalance(Date fechaCorte) {
+
+        List<SaldoCuenta> lista = new ArrayList<>();
+
+        if (fechaCorte == null) {
+            throw new IllegalArgumentException(
+                    "La fecha de corte es obligatoria."
+            );
+        }
+
+        String sql = """
+                SELECT
+                    CC.ID_CUENTA,
+                    CC.NOMBRE AS CUENTA,
+                    TC.NOMBRE AS TIPO_CUENTA,
+                    NVL(SUM(MOV.DEBE), 0) AS TOTAL_DEBE,
+                    NVL(SUM(MOV.HABER), 0) AS TOTAL_HABER,
+                    CASE
+                        WHEN TC.NOMBRE = 'ACTIVO'
+                            THEN NVL(SUM(MOV.DEBE), 0)
+                               - NVL(SUM(MOV.HABER), 0)
+                        WHEN TC.NOMBRE IN ('PASIVO', 'PATRIMONIO')
+                            THEN NVL(SUM(MOV.HABER), 0)
+                               - NVL(SUM(MOV.DEBE), 0)
+                        ELSE 0
+                    END AS SALDO
+                FROM CUENTA_CONTABLE CC
+                INNER JOIN TIPO_CUENTA TC
+                    ON CC.ID_TIPO_CUENTA = TC.ID_TIPO_CUENTA
+                LEFT JOIN (
+                    SELECT
+                        CD.ID_CUENTA,
+                        CD.DEBE,
+                        CD.HABER
+                    FROM COMPROBANTE_DETALLE CD
+                    INNER JOIN COMPROBANTE C
+                        ON C.ID_COMPROBANTE = CD.ID_COMPROBANTE
+                    WHERE C.FECHA < ? + 1
+                ) MOV
+                    ON CC.ID_CUENTA = MOV.ID_CUENTA
+                WHERE TC.NOMBRE IN (
+                    'ACTIVO',
+                    'PASIVO',
+                    'PATRIMONIO'
+                )
+                GROUP BY
+                    CC.ID_CUENTA,
+                    CC.NOMBRE,
+                    TC.NOMBRE
+                ORDER BY
+                    TC.NOMBRE,
+                    CC.NOMBRE
+                """;
 
         try {
+            Connection con = Conexion.conectar();
 
-            Connection con =
-                    Conexion.conectar();
-
-            String sql = """
-                    SELECT
-                    TC.NOMBRE TIPO_CUENTA,
-                    NVL(SUM(CD.DEBE),0) TOTAL_DEBE,
-                    NVL(SUM(CD.HABER),0) TOTAL_HABER
-                    FROM TIPO_CUENTA TC
-                    LEFT JOIN CUENTA_CONTABLE CC
-                    ON TC.ID_TIPO_CUENTA =
-                    CC.ID_TIPO_CUENTA
-                    LEFT JOIN COMPROBANTE_DETALLE CD
-                    ON CC.ID_CUENTA =
-                    CD.ID_CUENTA
-                    GROUP BY TC.NOMBRE
-                    ORDER BY TC.NOMBRE
-                    """;
-
-            PreparedStatement ps =
-                    con.prepareStatement(sql);
-
-            ResultSet rs =
-                    ps.executeQuery();
-
-            System.out.println(
-                    "===== BALANCE GENERAL =====");
-
-            while (rs.next()) {
-
-                System.out.println(
-
-                        rs.getString("TIPO_CUENTA")
-                        + " | DEBE: "
-                        + rs.getDouble("TOTAL_DEBE")
-                        + " | HABER: "
-                        + rs.getDouble("TOTAL_HABER")
+            if (con == null) {
+                throw new SQLException(
+                        "No se pudo conectar con Oracle."
                 );
             }
 
-        } catch (Exception e) {
+            try (
+                    con;
+                    PreparedStatement ps = con.prepareStatement(sql)
+            ) {
 
-            e.printStackTrace();
+                ps.setDate(1, fechaCorte);
 
+                try (ResultSet rs = ps.executeQuery()) {
+
+                    while (rs.next()) {
+
+                        SaldoCuenta saldo = new SaldoCuenta();
+
+                        saldo.setIdCuenta(rs.getInt("ID_CUENTA"));
+                        saldo.setNombreCuenta(rs.getString("CUENTA"));
+                        saldo.setTipoCuenta(rs.getString("TIPO_CUENTA"));
+                        saldo.setTotalDebe(rs.getDouble("TOTAL_DEBE"));
+                        saldo.setTotalHaber(rs.getDouble("TOTAL_HABER"));
+                        saldo.setSaldo(rs.getDouble("SALDO"));
+
+                        lista.add(saldo);
+                    }
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println(
+                    "Error al obtener el Balance General: "
+                            + e.getMessage()
+            );
+
+            throw new RuntimeException(
+                    "No se pudo generar el Balance General.",
+                    e
+            );
         }
 
+        return lista;
     }
 
+    public double obtenerResultadoEjercicio(Date fechaCorte) {
+
+        if (fechaCorte == null) {
+            throw new IllegalArgumentException(
+                    "La fecha de corte es obligatoria."
+            );
+        }
+
+        String sql = """
+                SELECT
+                    NVL(
+                        SUM(
+                            CASE
+                                WHEN TC.NOMBRE = 'INGRESO'
+                                    THEN NVL(CD.HABER, 0)
+                                       - NVL(CD.DEBE, 0)
+                                WHEN TC.NOMBRE = 'GASTO'
+                                    THEN NVL(CD.DEBE, 0)
+                                       - NVL(CD.HABER, 0)
+                                ELSE 0
+                            END
+                        ),
+                        0
+                    ) AS RESULTADO
+                FROM COMPROBANTE C
+                INNER JOIN COMPROBANTE_DETALLE CD
+                    ON C.ID_COMPROBANTE = CD.ID_COMPROBANTE
+                INNER JOIN CUENTA_CONTABLE CC
+                    ON CD.ID_CUENTA = CC.ID_CUENTA
+                INNER JOIN TIPO_CUENTA TC
+                    ON CC.ID_TIPO_CUENTA = TC.ID_TIPO_CUENTA
+                WHERE C.FECHA < ? + 1
+                  AND TC.NOMBRE IN ('INGRESO', 'GASTO')
+                """;
+
+        try {
+            Connection con = Conexion.conectar();
+
+            if (con == null) {
+                throw new SQLException(
+                        "No se pudo conectar con Oracle."
+                );
+            }
+
+            try (
+                    con;
+                    PreparedStatement ps = con.prepareStatement(sql)
+            ) {
+
+                ps.setDate(1, fechaCorte);
+
+                try (ResultSet rs = ps.executeQuery()) {
+
+                    if (rs.next()) {
+                        return rs.getDouble("RESULTADO");
+                    }
+                }
+            }
+
+        } catch (SQLException e) {
+
+            System.out.println(
+                    "Error al calcular el resultado del ejercicio: "
+                            + e.getMessage()
+            );
+
+            throw new RuntimeException(
+                    "No se pudo calcular el resultado del ejercicio.",
+                    e
+            );
+        }
+
+        return 0;
+    }
 }

@@ -1,3 +1,4 @@
+
 package modelo;
 
 public class TipoCuenta {
@@ -29,4 +30,8 @@ public class TipoCuenta {
         this.nombre = nombre;
     }
 
+    @Override
+    public String toString() {
+        return nombre;
+    }
 }

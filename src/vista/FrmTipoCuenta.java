@@ -1,3 +1,4 @@
+
 package vista;
 
 import dao.TipoCuentaDAO;
@@ -15,6 +16,8 @@ public class FrmTipoCuenta extends JFrame {
     private JButton btnModificar;
     private JButton btnEliminar;
     private JButton btnNuevo;
+
+    private final TipoCuentaDAO dao = new TipoCuentaDAO();
 
     public FrmTipoCuenta() {
 
@@ -36,6 +39,7 @@ public class FrmTipoCuenta extends JFrame {
 
         txtId = new JTextField();
         txtId.setBounds(150, 30, 200, 25);
+        txtId.setEditable(false);
 
         JLabel lblNombre = new JLabel("Nombre:");
         lblNombre.setBounds(30, 70, 120, 25);
@@ -88,89 +92,148 @@ public class FrmTipoCuenta extends JFrame {
         btnNuevo.addActionListener(e -> limpiar());
     }
 
+    // GUARDAR
     private void guardar() {
 
+        String nombre = txtNombre.getText().trim();
+
+        if (nombre.isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Ingrese el nombre del tipo de cuenta");
+            txtNombre.requestFocus();
+            return;
+        }
+
         TipoCuenta tipo = new TipoCuenta();
-
-        tipo.setIdTipoCuenta(
-                Integer.parseInt(txtId.getText()));
-
-        tipo.setNombre(
-                txtNombre.getText());
-
-        TipoCuentaDAO dao = new TipoCuentaDAO();
+        tipo.setNombre(nombre);
 
         if (dao.guardar(tipo)) {
 
+            txtId.setText(
+                    String.valueOf(tipo.getIdTipoCuenta()));
+
             JOptionPane.showMessageDialog(
                     this,
-                    "Registro guardado");
+                    "Registro guardado correctamente.\nID generado: "
+                    + tipo.getIdTipoCuenta());
 
         } else {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Error al guardar");
+                    "Error al guardar el registro");
         }
     }
 
+    // BUSCAR
     private void buscar() {
 
-        TipoCuentaDAO dao = new TipoCuentaDAO();
+        String idTexto = JOptionPane.showInputDialog(
+                this,
+                "Ingrese el ID del tipo de cuenta:");
 
-        TipoCuenta tipo =
-                dao.buscar(
-                        Integer.parseInt(txtId.getText()));
+        if (idTexto == null) {
+            return;
+        }
 
-        if (tipo != null) {
+        try {
 
-            txtNombre.setText(
-                    tipo.getNombre());
+            int id = Integer.parseInt(idTexto.trim());
 
-        } else {
+            TipoCuenta tipo = dao.buscar(id);
+
+            if (tipo != null) {
+
+                txtId.setText(
+                        String.valueOf(tipo.getIdTipoCuenta()));
+
+                txtNombre.setText(tipo.getNombre());
+
+            } else {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "No se encontró el tipo de cuenta");
+
+                limpiar();
+            }
+
+        } catch (NumberFormatException e) {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "No encontrado");
+                    "Ingrese un ID numérico válido");
         }
     }
 
+    // MODIFICAR
     private void modificar() {
+
+        if (txtId.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Primero debe buscar un registro");
+            return;
+        }
+
+        String nombre = txtNombre.getText().trim();
+
+        if (nombre.isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Ingrese el nombre del tipo de cuenta");
+            return;
+        }
 
         TipoCuenta tipo = new TipoCuenta();
 
         tipo.setIdTipoCuenta(
                 Integer.parseInt(txtId.getText()));
 
-        tipo.setNombre(
-                txtNombre.getText());
-
-        TipoCuentaDAO dao = new TipoCuentaDAO();
+        tipo.setNombre(nombre);
 
         if (dao.modificar(tipo)) {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Registro modificado");
+                    "Registro modificado correctamente");
 
         } else {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Error");
+                    "No se pudo modificar el registro");
         }
     }
 
+    // ELIMINAR
     private void eliminar() {
 
-        TipoCuentaDAO dao = new TipoCuentaDAO();
+        if (txtId.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Primero debe buscar un registro");
+            return;
+        }
 
-        if (dao.eliminar(
-                Integer.parseInt(txtId.getText()))) {
+        int confirmacion = JOptionPane.showConfirmDialog(
+                this,
+                "¿Está seguro de eliminar este registro?",
+                "Confirmar eliminación",
+                JOptionPane.YES_NO_OPTION);
+
+        if (confirmacion != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        int id = Integer.parseInt(txtId.getText());
+
+        if (dao.eliminar(id)) {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Registro eliminado");
+                    "Registro eliminado correctamente");
 
             limpiar();
 
@@ -178,14 +241,16 @@ public class FrmTipoCuenta extends JFrame {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Error");
+                    "No se pudo eliminar el registro");
         }
     }
 
+    // LIMPIAR
     private void limpiar() {
 
         txtId.setText("");
         txtNombre.setText("");
+        txtNombre.requestFocus();
     }
 
     public static void main(String[] args) {
@@ -193,6 +258,5 @@ public class FrmTipoCuenta extends JFrame {
         SwingUtilities.invokeLater(() -> {
             new FrmTipoCuenta().setVisible(true);
         });
-
     }
 }

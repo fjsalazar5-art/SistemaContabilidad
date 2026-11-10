@@ -60,6 +60,23 @@ public class ComprobanteDetalleDAO {
         }
     }
 
+    // ELIMINAR TODOS LOS DETALLES DE UN COMPROBANTE
+    // (se usa dentro de una transaccion existente)
+    public void eliminarPorComprobante(Connection con, int idComprobante)
+            throws java.sql.SQLException {
+
+        String sql = """
+                DELETE FROM COMPROBANTE_DETALLE
+                WHERE ID_COMPROBANTE = ?
+                """;
+
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, idComprobante);
+            ps.executeUpdate();
+        }
+    }
+
     // LISTAR DETALLES DE UN COMPROBANTE
     public List<ComprobanteDetalle> listarPorComprobante(
             int idComprobante) {

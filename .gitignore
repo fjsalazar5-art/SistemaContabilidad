@@ -2,3 +2,5 @@
 /dist/
 /nbproject/private/
 *.class
+# Datos de conexion locales (con la clave real)
+/conexion.properties

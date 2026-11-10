@@ -1,0 +1,5 @@
+# Copia este archivo como conexion.properties (queda fuera de Git)
+# y coloca tus datos reales de Oracle.
+url=jdbc:oracle:thin:@localhost:1521/XEPDB1
+usuario=PROYECTO
+clave=CAMBIAR_ESTA_CLAVE

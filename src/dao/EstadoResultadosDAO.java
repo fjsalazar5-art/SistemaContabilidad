@@ -35,14 +35,14 @@ public class EstadoResultadosDAO {
                 SELECT
                     CC.ID_CUENTA,
                     CC.NOMBRE AS CUENTA,
-                    TC.NOMBRE AS TIPO_CUENTA,
+                    {TIPO} AS TIPO_CUENTA,
                     NVL(SUM(MOV.DEBE), 0) AS TOTAL_DEBE,
                     NVL(SUM(MOV.HABER), 0) AS TOTAL_HABER,
                     CASE
-                        WHEN TC.NOMBRE = 'INGRESO'
+                        WHEN {TIPO} = 'INGRESO'
                             THEN NVL(SUM(MOV.HABER), 0)
                                - NVL(SUM(MOV.DEBE), 0)
-                        WHEN TC.NOMBRE = 'GASTO'
+                        WHEN {TIPO} = 'GASTO'
                             THEN NVL(SUM(MOV.DEBE), 0)
                                - NVL(SUM(MOV.HABER), 0)
                         ELSE 0
@@ -62,13 +62,13 @@ public class EstadoResultadosDAO {
                       AND C.FECHA < ? + 1
                 ) MOV
                     ON CC.ID_CUENTA = MOV.ID_CUENTA
-                WHERE TC.NOMBRE IN ('INGRESO', 'GASTO')
+                WHERE {TIPO} IN ('INGRESO', 'GASTO')
                 GROUP BY
                     CC.ID_CUENTA,
                     CC.NOMBRE,
-                    TC.NOMBRE
+                    {TIPO}
                 ORDER BY
-                    TC.NOMBRE,
+                    {TIPO},
                     CC.NOMBRE
                 """;
 
@@ -83,7 +83,7 @@ public class EstadoResultadosDAO {
 
             try (
                     con;
-                    PreparedStatement ps = con.prepareStatement(sql)
+                    PreparedStatement ps = con.prepareStatement(TipoCuentaSql.aplicar(sql))
             ) {
 
                 ps.setDate(1, fechaInicio);

@@ -48,6 +48,54 @@ public class ComprobanteDAO {
         }
     }
 
+    // ACTUALIZAR CABECERA UTILIZANDO UNA CONEXION EXISTENTE
+    public boolean actualizar(Connection con, Comprobante comprobante) {
+
+        String sql = """
+                UPDATE COMPROBANTE
+                SET FECHA = ?,
+                    OBSERVACION = ?
+                WHERE ID_COMPROBANTE = ?
+                """;
+
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setDate(1, comprobante.getFecha());
+            ps.setString(2, comprobante.getObservacion());
+            ps.setInt(3, comprobante.getIdComprobante());
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+
+            System.out.println("Error al actualizar cabecera:");
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // ELIMINAR CABECERA UTILIZANDO UNA CONEXION EXISTENTE
+    public boolean eliminar(Connection con, int id) {
+
+        String sql = """
+                DELETE FROM COMPROBANTE
+                WHERE ID_COMPROBANTE = ?
+                """;
+
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+
+            System.out.println("Error al eliminar cabecera:");
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     // BUSCAR COMPROBANTE
     public Comprobante buscar(int id) {
 

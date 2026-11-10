@@ -26,10 +26,15 @@ public class FrmComprobante extends JFrame {
     private JTextField txtDebe;
     private JTextField txtHaber;
 
-    private JButton btnAgregar;
-    private JButton btnEliminarDetalle;
-    private JButton btnGuardar;
+    private JButton btnNuevo;
     private JButton btnBuscar;
+    private JButton btnGuardar;
+    private JButton btnModificar;
+    private JButton btnEliminar;
+
+    private JButton btnAgregar;
+    private JButton btnModificarDetalle;
+    private JButton btnEliminarDetalle;
 
     private JTable tabla;
     private DefaultTableModel modeloTabla;
@@ -37,21 +42,28 @@ public class FrmComprobante extends JFrame {
     private JLabel lblTotalDebe;
     private JLabel lblTotalHaber;
 
+    // Numero del comprobante cargado con Buscar.
+    // null = comprobante nuevo (aun no guardado).
+    private Integer comprobanteActual = null;
+
     public FrmComprobante() {
 
         setTitle("Comprobante Contable");
-        setSize(900, 600);
+        setSize(900, 620);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         inicializar();
         cargarCuentas();
+        actualizarEstadoBotones();
     }
 
     private void inicializar() {
 
         JPanel panel = new JPanel();
         panel.setLayout(null);
+
+        // ---------------- CABECERA ----------------
 
         JLabel lblNumero = new JLabel("Número:");
         lblNumero.setBounds(30, 20, 100, 25);
@@ -74,6 +86,8 @@ public class FrmComprobante extends JFrame {
         txtObservacion = new JTextField();
         txtObservacion.setBounds(120, 60, 550, 25);
 
+        // ---------------- DETALLE ----------------
+
         JLabel lblCuenta = new JLabel("Cuenta:");
         lblCuenta.setBounds(30, 120, 100, 25);
 
@@ -95,11 +109,11 @@ public class FrmComprobante extends JFrame {
         btnAgregar = new JButton("Agregar Detalle");
         btnAgregar.setBounds(720, 120, 140, 25);
 
-        btnEliminarDetalle = new JButton("Eliminar Detalle");
-        btnEliminarDetalle.setBounds(720, 155, 140, 25);
+        btnModificarDetalle = new JButton("Modificar Detalle");
+        btnModificarDetalle.setBounds(720, 155, 140, 25);
 
-        btnGuardar = new JButton("Guardar Comprobante");
-        btnGuardar.setBounds(620, 470, 220, 30);
+        btnEliminarDetalle = new JButton("Eliminar Detalle");
+        btnEliminarDetalle.setBounds(720, 190, 140, 25);
 
         modeloTabla = new DefaultTableModel(
                 new Object[]{"Cuenta", "Debe", "Haber"}, 0) {
@@ -111,15 +125,30 @@ public class FrmComprobante extends JFrame {
         };
 
         tabla = new JTable(modeloTabla);
+        tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         JScrollPane scroll = new JScrollPane(tabla);
-        scroll.setBounds(30, 200, 830, 230);
+        scroll.setBounds(30, 225, 830, 200);
+
+        // ---------------- TOTALES Y ACCIONES ----------------
 
         lblTotalDebe = new JLabel("Total Debe: 0.00");
-        lblTotalDebe.setBounds(30, 470, 200, 25);
+        lblTotalDebe.setBounds(30, 435, 200, 25);
 
         lblTotalHaber = new JLabel("Total Haber: 0.00");
-        lblTotalHaber.setBounds(250, 470, 200, 25);
+        lblTotalHaber.setBounds(250, 435, 200, 25);
+
+        btnNuevo = new JButton("Nuevo");
+        btnNuevo.setBounds(30, 485, 110, 32);
+
+        btnGuardar = new JButton("Guardar");
+        btnGuardar.setBounds(150, 485, 140, 32);
+
+        btnModificar = new JButton("Modificar");
+        btnModificar.setBounds(300, 485, 140, 32);
+
+        btnEliminar = new JButton("Eliminar Comprobante");
+        btnEliminar.setBounds(450, 485, 190, 32);
 
         panel.add(lblNumero);
         panel.add(txtNumero);
@@ -135,18 +164,34 @@ public class FrmComprobante extends JFrame {
         panel.add(lblHaber);
         panel.add(txtHaber);
         panel.add(btnAgregar);
+        panel.add(btnModificarDetalle);
         panel.add(btnEliminarDetalle);
-        panel.add(btnGuardar);
         panel.add(scroll);
         panel.add(lblTotalDebe);
         panel.add(lblTotalHaber);
+        panel.add(btnNuevo);
+        panel.add(btnGuardar);
+        panel.add(btnModificar);
+        panel.add(btnEliminar);
 
         add(panel, BorderLayout.CENTER);
 
-        btnAgregar.addActionListener(e -> agregarDetalle());
-        btnEliminarDetalle.addActionListener(e -> eliminarDetalle());
-        btnGuardar.addActionListener(e -> guardarComprobante());
+        btnNuevo.addActionListener(e -> nuevo());
         btnBuscar.addActionListener(e -> buscarComprobante());
+        btnGuardar.addActionListener(e -> guardarComprobante());
+        btnModificar.addActionListener(e -> modificarComprobante());
+        btnEliminar.addActionListener(e -> eliminarComprobante());
+
+        btnAgregar.addActionListener(e -> agregarDetalle());
+        btnModificarDetalle.addActionListener(e -> modificarDetalle());
+        btnEliminarDetalle.addActionListener(e -> eliminarDetalle());
+
+        // Al elegir una fila, sus valores pasan a los campos de edicion
+        tabla.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                cargarFilaSeleccionada();
+            }
+        });
     }
 
     private void cargarCuentas() {
@@ -168,72 +213,125 @@ public class FrmComprobante extends JFrame {
         }
     }
 
+    // ---------------------------------------------------------
+    // ESTADO DE LA PANTALLA
+    // Guardar solo para comprobantes nuevos.
+    // Modificar y Eliminar solo para comprobantes ya buscados.
+    // ---------------------------------------------------------
+    private void actualizarEstadoBotones() {
+
+        boolean existente = comprobanteActual != null;
+
+        btnGuardar.setEnabled(!existente);
+        btnModificar.setEnabled(existente);
+        btnEliminar.setEnabled(existente);
+    }
+
+    private void nuevo() {
+
+        limpiarFormulario();
+    }
+
+    // ---------------------------------------------------------
+    // DETALLE (en pantalla, antes de guardar)
+    // ---------------------------------------------------------
+
+    // Lee y valida cuenta, debe y haber de los campos de edicion
+    private Object[] leerLinea() throws Exception {
+
+        CuentaContable cuenta =
+                (CuentaContable) cboCuenta.getSelectedItem();
+
+        if (cuenta == null) {
+            throw new Exception("Seleccione una cuenta contable");
+        }
+
+        String textoDebe = txtDebe.getText().trim();
+        String textoHaber = txtHaber.getText().trim();
+
+        if (textoDebe.isEmpty()) {
+            textoDebe = "0";
+        }
+
+        if (textoHaber.isEmpty()) {
+            textoHaber = "0";
+        }
+
+        double debe;
+        double haber;
+
+        try {
+            debe = Double.parseDouble(textoDebe.replace(",", "."));
+            haber = Double.parseDouble(textoHaber.replace(",", "."));
+        } catch (NumberFormatException e) {
+            throw new Exception("Ingrese valores numéricos válidos");
+        }
+
+        if (!Double.isFinite(debe) || !Double.isFinite(haber)) {
+            throw new Exception("Ingrese valores numéricos válidos");
+        }
+
+        if (debe < 0 || haber < 0) {
+            throw new Exception("Los valores no pueden ser negativos");
+        }
+
+        if (debe > 0 && haber > 0) {
+            throw new Exception(
+                    "Ingrese el valor solamente en Debe o Haber");
+        }
+
+        if (debe == 0 && haber == 0) {
+            throw new Exception("Ingrese un valor en Debe o Haber");
+        }
+
+        return new Object[]{cuenta, debe, haber};
+    }
+
     private void agregarDetalle() {
 
         try {
 
-            CuentaContable cuenta =
-                    (CuentaContable) cboCuenta.getSelectedItem();
-
-            if (cuenta == null) {
-                throw new Exception("Seleccione una cuenta contable");
-            }
-
-            String textoDebe = txtDebe.getText().trim();
-            String textoHaber = txtHaber.getText().trim();
-
-            if (textoDebe.isEmpty()) {
-                textoDebe = "0";
-            }
-
-            if (textoHaber.isEmpty()) {
-                textoHaber = "0";
-            }
-
-            double debe = Double.parseDouble(
-                    textoDebe.replace(",", "."));
-
-            double haber = Double.parseDouble(
-                    textoHaber.replace(",", "."));
-
-            if (!Double.isFinite(debe) || !Double.isFinite(haber)) {
-                throw new Exception("Ingrese valores numéricos válidos");
-            }
-
-            if (debe < 0 || haber < 0) {
-                throw new Exception(
-                        "Los valores no pueden ser negativos");
-            }
-
-            if (debe > 0 && haber > 0) {
-                throw new Exception(
-                        "Ingrese el valor solamente en Debe o Haber");
-            }
-
-            if (debe == 0 && haber == 0) {
-                throw new Exception(
-                        "Ingrese un valor en Debe o Haber");
-            }
-
-            modeloTabla.addRow(
-                    new Object[]{cuenta, debe, haber});
+            modeloTabla.addRow(leerLinea());
 
             calcularTotales();
 
-            txtDebe.setText("");
-            txtHaber.setText("");
-
-        } catch (NumberFormatException e) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Ingrese valores numéricos válidos");
+            limpiarCamposDetalle();
 
         } catch (Exception e) {
 
+            JOptionPane.showMessageDialog(this, e.getMessage());
+        }
+    }
+
+    private void modificarDetalle() {
+
+        int fila = tabla.getSelectedRow();
+
+        if (fila == -1) {
+
             JOptionPane.showMessageDialog(
                     this,
-                    e.getMessage());
+                    "Seleccione la fila que desea modificar");
+
+            return;
+        }
+
+        try {
+
+            Object[] linea = leerLinea();
+
+            modeloTabla.setValueAt(linea[0], fila, 0);
+            modeloTabla.setValueAt(linea[1], fila, 1);
+            modeloTabla.setValueAt(linea[2], fila, 2);
+
+            calcularTotales();
+
+            tabla.clearSelection();
+            limpiarCamposDetalle();
+
+        } catch (Exception e) {
+
+            JOptionPane.showMessageDialog(this, e.getMessage());
         }
     }
 
@@ -252,7 +350,41 @@ public class FrmComprobante extends JFrame {
 
         modeloTabla.removeRow(fila);
 
+        limpiarCamposDetalle();
+
         calcularTotales();
+    }
+
+    private void cargarFilaSeleccionada() {
+
+        int fila = tabla.getSelectedRow();
+
+        if (fila == -1) {
+            return;
+        }
+
+        CuentaContable cuenta =
+                (CuentaContable) modeloTabla.getValueAt(fila, 0);
+
+        double debe = Double.parseDouble(
+                modeloTabla.getValueAt(fila, 1).toString());
+
+        double haber = Double.parseDouble(
+                modeloTabla.getValueAt(fila, 2).toString());
+
+        // Se selecciona en el combo la cuenta con el mismo ID
+        for (int i = 0; i < cboCuenta.getItemCount(); i++) {
+
+            if (cboCuenta.getItemAt(i).getIdCuenta()
+                    == cuenta.getIdCuenta()) {
+
+                cboCuenta.setSelectedIndex(i);
+                break;
+            }
+        }
+
+        txtDebe.setText(debe > 0 ? String.valueOf(debe) : "");
+        txtHaber.setText(haber > 0 ? String.valueOf(haber) : "");
     }
 
     private void calcularTotales() {
@@ -276,50 +408,46 @@ public class FrmComprobante extends JFrame {
                 "Total Haber: " + String.format("%.2f", totalHaber));
     }
 
+    // Convierte las filas de la tabla en lineas para el gestor
+    private List<LineaComprobante> leerLineasDeLaTabla() {
+
+        List<LineaComprobante> lineas = new ArrayList<>();
+
+        for (int i = 0; i < modeloTabla.getRowCount(); i++) {
+
+            CuentaContable cuenta =
+                    (CuentaContable) modeloTabla.getValueAt(i, 0);
+
+            double debe = Double.parseDouble(
+                    modeloTabla.getValueAt(i, 1).toString());
+
+            double haber = Double.parseDouble(
+                    modeloTabla.getValueAt(i, 2).toString());
+
+            lineas.add(
+                    new LineaComprobante(
+                            cuenta.getIdCuenta(),
+                            cuenta.getNombre(),
+                            debe,
+                            haber));
+        }
+
+        return lineas;
+    }
+
+    // ---------------------------------------------------------
+    // GUARDAR (comprobante nuevo)
+    // ---------------------------------------------------------
     private void guardarComprobante() {
 
         try {
-
-            if (txtFecha.getText().trim().isEmpty()) {
-                throw new Exception("Ingrese la fecha del comprobante");
-            }
-
-            if (txtObservacion.getText().trim().isEmpty()) {
-                throw new Exception("Ingrese una observación");
-            }
-
-            if (modeloTabla.getRowCount() == 0) {
-                throw new Exception(
-                        "Agregue al menos un detalle al comprobante");
-            }
-
-            List<LineaComprobante> lineas = new ArrayList<>();
-
-            for (int i = 0; i < modeloTabla.getRowCount(); i++) {
-
-                CuentaContable cuenta =
-                        (CuentaContable) modeloTabla.getValueAt(i, 0);
-
-                double debe = Double.parseDouble(
-                        modeloTabla.getValueAt(i, 1).toString());
-
-                double haber = Double.parseDouble(
-                        modeloTabla.getValueAt(i, 2).toString());
-
-                lineas.add(
-                        new LineaComprobante(
-                                cuenta.getIdCuenta(),
-                                cuenta.getNombre(),
-                                debe,
-                                haber));
-            }
 
             GestorComprobante gestor = new GestorComprobante();
 
             boolean guardado = gestor.guardarComprobante(
                     txtFecha.getText().trim(),
                     txtObservacion.getText().trim(),
-                    lineas);
+                    leerLineasDeLaTabla());
 
             if (guardado) {
 
@@ -328,19 +456,103 @@ public class FrmComprobante extends JFrame {
                         "Comprobante guardado correctamente");
 
                 limpiarFormulario();
-
             }
 
         } catch (Exception e) {
 
-            JOptionPane.showMessageDialog(
-                    this,
-                    e.getMessage(),
-                    "Error al guardar comprobante",
-                    JOptionPane.ERROR_MESSAGE);
+            mostrarError("Error al guardar comprobante", e);
         }
     }
 
+    // ---------------------------------------------------------
+    // MODIFICAR (comprobante existente)
+    // ---------------------------------------------------------
+    private void modificarComprobante() {
+
+        if (comprobanteActual == null) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Primero busque el comprobante que desea modificar");
+
+            return;
+        }
+
+        try {
+
+            GestorComprobante gestor = new GestorComprobante();
+
+            boolean modificado = gestor.modificarComprobante(
+                    comprobanteActual,
+                    txtFecha.getText().trim(),
+                    txtObservacion.getText().trim(),
+                    leerLineasDeLaTabla());
+
+            if (modificado) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Comprobante " + comprobanteActual
+                        + " modificado correctamente");
+
+                // Se vuelve a leer desde la base para mostrar lo guardado
+                cargarComprobante(comprobanteActual);
+            }
+
+        } catch (Exception e) {
+
+            mostrarError("Error al modificar comprobante", e);
+        }
+    }
+
+    // ---------------------------------------------------------
+    // ELIMINAR (cabecera y detalles)
+    // ---------------------------------------------------------
+    private void eliminarComprobante() {
+
+        if (comprobanteActual == null) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Primero busque el comprobante que desea eliminar");
+
+            return;
+        }
+
+        int opcion = JOptionPane.showConfirmDialog(
+                this,
+                "¿Eliminar el comprobante " + comprobanteActual
+                + " con todos sus detalles?",
+                "Confirmar eliminación",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+
+        if (opcion != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        try {
+
+            GestorComprobante gestor = new GestorComprobante();
+
+            if (gestor.eliminarComprobante(comprobanteActual)) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Comprobante eliminado correctamente");
+
+                limpiarFormulario();
+            }
+
+        } catch (Exception e) {
+
+            mostrarError("Error al eliminar comprobante", e);
+        }
+    }
+
+    // ---------------------------------------------------------
+    // BUSCAR
+    // ---------------------------------------------------------
     private void buscarComprobante() {
 
         try {
@@ -352,51 +564,12 @@ public class FrmComprobante extends JFrame {
 
             int id = Integer.parseInt(txtNumero.getText().trim());
 
-            ComprobanteDAO dao = new ComprobanteDAO();
-
-            Comprobante comp = dao.buscar(id);
-
-            if (comp == null) {
+            if (!cargarComprobante(id)) {
 
                 JOptionPane.showMessageDialog(
                         this,
                         "Comprobante no encontrado");
-
-                return;
             }
-
-            txtFecha.setText(comp.getFecha().toString());
-
-            txtObservacion.setText(comp.getObservacion());
-
-            modeloTabla.setRowCount(0);
-
-            ComprobanteDetalleDAO detalleDAO =
-                    new ComprobanteDetalleDAO();
-
-            List<ComprobanteDetalle> detalles =
-                    detalleDAO.listarPorComprobante(id);
-
-            CuentaContableDAO cuentaDAO =
-                    new CuentaContableDAO();
-
-            for (ComprobanteDetalle d : detalles) {
-
-                CuentaContable cuenta =
-                        cuentaDAO.buscar(d.getIdCuenta());
-
-                if (cuenta != null) {
-
-                    modeloTabla.addRow(
-                            new Object[]{
-                                cuenta,
-                                d.getDebe(),
-                                d.getHaber()
-                            });
-                }
-            }
-
-            calcularTotales();
 
         } catch (NumberFormatException e) {
 
@@ -406,10 +579,71 @@ public class FrmComprobante extends JFrame {
 
         } catch (Exception e) {
 
-            JOptionPane.showMessageDialog(
-                    this,
-                    e.getMessage());
+            JOptionPane.showMessageDialog(this, e.getMessage());
         }
+    }
+
+    // Carga cabecera y detalles. Devuelve false si no existe.
+    private boolean cargarComprobante(int id) {
+
+        Comprobante comp = new ComprobanteDAO().buscar(id);
+
+        if (comp == null) {
+            return false;
+        }
+
+        txtNumero.setText(String.valueOf(comp.getIdComprobante()));
+        txtFecha.setText(comp.getFecha().toString());
+        txtObservacion.setText(comp.getObservacion());
+
+        modeloTabla.setRowCount(0);
+
+        List<ComprobanteDetalle> detalles =
+                new ComprobanteDetalleDAO().listarPorComprobante(id);
+
+        CuentaContableDAO cuentaDAO = new CuentaContableDAO();
+
+        for (ComprobanteDetalle d : detalles) {
+
+            CuentaContable cuenta = cuentaDAO.buscar(d.getIdCuenta());
+
+            if (cuenta != null) {
+
+                modeloTabla.addRow(
+                        new Object[]{
+                            cuenta,
+                            d.getDebe(),
+                            d.getHaber()
+                        });
+            }
+        }
+
+        limpiarCamposDetalle();
+
+        calcularTotales();
+
+        comprobanteActual = id;
+        actualizarEstadoBotones();
+
+        return true;
+    }
+
+    // ---------------------------------------------------------
+    // UTILIDADES
+    // ---------------------------------------------------------
+    private void mostrarError(String titulo, Exception e) {
+
+        JOptionPane.showMessageDialog(
+                this,
+                e.getMessage(),
+                titulo,
+                JOptionPane.ERROR_MESSAGE);
+    }
+
+    private void limpiarCamposDetalle() {
+
+        txtDebe.setText("");
+        txtHaber.setText("");
     }
 
     private void limpiarFormulario() {
@@ -417,8 +651,8 @@ public class FrmComprobante extends JFrame {
         txtNumero.setText("");
         txtFecha.setText("");
         txtObservacion.setText("");
-        txtDebe.setText("");
-        txtHaber.setText("");
+
+        limpiarCamposDetalle();
 
         modeloTabla.setRowCount(0);
 
@@ -427,6 +661,9 @@ public class FrmComprobante extends JFrame {
         if (cboCuenta.getItemCount() > 0) {
             cboCuenta.setSelectedIndex(0);
         }
+
+        comprobanteActual = null;
+        actualizarEstadoBotones();
     }
 
     public static void main(String[] args) {

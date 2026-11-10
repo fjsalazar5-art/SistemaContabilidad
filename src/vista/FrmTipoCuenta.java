@@ -24,7 +24,7 @@ public class FrmTipoCuenta extends JFrame {
         setTitle("Tipo Cuenta");
         setSize(500, 250);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         inicializarComponentes();
     }

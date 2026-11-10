@@ -27,14 +27,14 @@ public class BalanceGeneralDAO {
                 SELECT
                     CC.ID_CUENTA,
                     CC.NOMBRE AS CUENTA,
-                    TC.NOMBRE AS TIPO_CUENTA,
+                    {TIPO} AS TIPO_CUENTA,
                     NVL(SUM(MOV.DEBE), 0) AS TOTAL_DEBE,
                     NVL(SUM(MOV.HABER), 0) AS TOTAL_HABER,
                     CASE
-                        WHEN TC.NOMBRE = 'ACTIVO'
+                        WHEN {TIPO} = 'ACTIVO'
                             THEN NVL(SUM(MOV.DEBE), 0)
                                - NVL(SUM(MOV.HABER), 0)
-                        WHEN TC.NOMBRE IN ('PASIVO', 'PATRIMONIO')
+                        WHEN {TIPO} IN ('PASIVO', 'PATRIMONIO')
                             THEN NVL(SUM(MOV.HABER), 0)
                                - NVL(SUM(MOV.DEBE), 0)
                         ELSE 0
@@ -53,7 +53,7 @@ public class BalanceGeneralDAO {
                     WHERE C.FECHA < ? + 1
                 ) MOV
                     ON CC.ID_CUENTA = MOV.ID_CUENTA
-                WHERE TC.NOMBRE IN (
+                WHERE {TIPO} IN (
                     'ACTIVO',
                     'PASIVO',
                     'PATRIMONIO'
@@ -61,9 +61,9 @@ public class BalanceGeneralDAO {
                 GROUP BY
                     CC.ID_CUENTA,
                     CC.NOMBRE,
-                    TC.NOMBRE
+                    {TIPO}
                 ORDER BY
-                    TC.NOMBRE,
+                    {TIPO},
                     CC.NOMBRE
                 """;
 
@@ -78,7 +78,7 @@ public class BalanceGeneralDAO {
 
             try (
                     con;
-                    PreparedStatement ps = con.prepareStatement(sql)
+                    PreparedStatement ps = con.prepareStatement(TipoCuentaSql.aplicar(sql))
             ) {
 
                 ps.setDate(1, fechaCorte);
@@ -129,12 +129,9 @@ public class BalanceGeneralDAO {
                     NVL(
                         SUM(
                             CASE
-                                WHEN TC.NOMBRE = 'INGRESO'
+                                WHEN {TIPO} IN ('INGRESO', 'GASTO')
                                     THEN NVL(CD.HABER, 0)
                                        - NVL(CD.DEBE, 0)
-                                WHEN TC.NOMBRE = 'GASTO'
-                                    THEN NVL(CD.DEBE, 0)
-                                       - NVL(CD.HABER, 0)
                                 ELSE 0
                             END
                         ),
@@ -148,7 +145,7 @@ public class BalanceGeneralDAO {
                 INNER JOIN TIPO_CUENTA TC
                     ON CC.ID_TIPO_CUENTA = TC.ID_TIPO_CUENTA
                 WHERE C.FECHA < ? + 1
-                  AND TC.NOMBRE IN ('INGRESO', 'GASTO')
+                  AND {TIPO} IN ('INGRESO', 'GASTO')
                 """;
 
         try {
@@ -162,7 +159,7 @@ public class BalanceGeneralDAO {
 
             try (
                     con;
-                    PreparedStatement ps = con.prepareStatement(sql)
+                    PreparedStatement ps = con.prepareStatement(TipoCuentaSql.aplicar(sql))
             ) {
 
                 ps.setDate(1, fechaCorte);

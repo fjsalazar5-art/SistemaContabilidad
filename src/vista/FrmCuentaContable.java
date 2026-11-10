@@ -29,7 +29,7 @@ public class FrmCuentaContable extends JFrame {
         setTitle("Cuenta Contable");
         setSize(560, 350);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setResizable(false);
 
         inicializar();

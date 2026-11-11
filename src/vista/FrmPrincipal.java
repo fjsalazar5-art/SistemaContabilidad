@@ -9,6 +9,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import vista.login.FrmLogin;
 
 public class FrmPrincipal extends JFrame {
 
@@ -78,8 +79,14 @@ public class FrmPrincipal extends JFrame {
 
     public static void main(String[] args) {
 
-        SwingUtilities.invokeLater(() -> {
-            new FrmPrincipal().setVisible(true);
+       java.awt.EventQueue.invokeLater(
+        new Runnable() {
+
+            public void run() {
+
+                new FrmLogin()
+                        .setVisible(true);
+            }
         });
     }
 }

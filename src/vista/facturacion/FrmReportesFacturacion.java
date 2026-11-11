@@ -4,6 +4,18 @@
  */
 package vista.facturacion;
 import vista.FrmMenuPrincipal;
+import java.sql.ResultSet;
+import javax.swing.table.DefaultTableModel;
+import dao.facturacion.ReporteDAO;
+import javax.swing.JOptionPane;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
+import java.util.ArrayList;
+import java.io.FileOutputStream;
+import java.awt.Desktop;
+import java.io.File;
 /**
  *
  * @author KEVIN
@@ -36,10 +48,10 @@ public class FrmReportesFacturacion extends javax.swing.JFrame {
         jLabel3 = new javax.swing.JLabel();
         btnConsultar = new javax.swing.JButton();
         btnImprimir = new javax.swing.JButton();
-        rdbVentasCiudad = new javax.swing.JRadioButton();
-        rdbClienteArticulo = new javax.swing.JRadioButton();
+        rbVentasCiudad = new javax.swing.JRadioButton();
+        rbClienteArticulo = new javax.swing.JRadioButton();
         jScrollPane1 = new javax.swing.JScrollPane();
-        tblReportes = new javax.swing.JTable();
+        tblReporte = new javax.swing.JTable();
         txtFechaDesde = new javax.swing.JTextField();
         txtFechaHasta = new javax.swing.JTextField();
         jButton5 = new javax.swing.JButton();
@@ -58,19 +70,21 @@ public class FrmReportesFacturacion extends javax.swing.JFrame {
 
         btnConsultar.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnConsultar.setText("Consultar");
+        btnConsultar.addActionListener(this::btnConsultarActionPerformed);
 
         btnImprimir.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnImprimir.setText("Imprimir");
+        btnImprimir.addActionListener(this::btnImprimirActionPerformed);
 
-        buttonGroup1.add(rdbVentasCiudad);
-        rdbVentasCiudad.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        rdbVentasCiudad.setText("Ventas por Ciudad");
+        buttonGroup1.add(rbVentasCiudad);
+        rbVentasCiudad.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        rbVentasCiudad.setText("Ventas por Ciudad");
 
-        buttonGroup1.add(rdbClienteArticulo);
-        rdbClienteArticulo.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        rdbClienteArticulo.setText("Cliente - Artículo");
+        buttonGroup1.add(rbClienteArticulo);
+        rbClienteArticulo.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        rbClienteArticulo.setText("Cliente - Artículo");
 
-        tblReportes.setModel(new javax.swing.table.DefaultTableModel(
+        tblReporte.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},
                 {null, null, null, null},
@@ -78,10 +92,10 @@ public class FrmReportesFacturacion extends javax.swing.JFrame {
                 {null, null, null, null}
             },
             new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
+                "", "", "", ""
             }
         ));
-        jScrollPane1.setViewportView(tblReportes);
+        jScrollPane1.setViewportView(tblReporte);
 
         jButton5.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         jButton5.setText("Menu Principal");
@@ -105,8 +119,7 @@ public class FrmReportesFacturacion extends javax.swing.JFrame {
                                 .addGap(38, 38, 38)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                     .addComponent(txtFechaHasta, javax.swing.GroupLayout.DEFAULT_SIZE, 94, Short.MAX_VALUE)
-                                    .addComponent(txtFechaDesde)))
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 526, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                    .addComponent(txtFechaDesde)))))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(43, 43, 43)
                         .addComponent(jLabel1)
@@ -114,14 +127,17 @@ public class FrmReportesFacturacion extends javax.swing.JFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addGap(42, 42, 42)
-                                .addComponent(rdbVentasCiudad)
+                                .addComponent(rbVentasCiudad)
                                 .addGap(35, 35, 35)
-                                .addComponent(rdbClienteArticulo))
+                                .addComponent(rbClienteArticulo))
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                                 .addGap(307, 307, 307)
-                                .addComponent(jButton5)
-                                .addGap(25, 25, 25)))))
-                .addGap(75, 75, Short.MAX_VALUE))
+                                .addComponent(jButton5)))))
+                .addGap(100, 100, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 526, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(78, 78, 78))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -130,8 +146,8 @@ public class FrmReportesFacturacion extends javax.swing.JFrame {
                 .addComponent(jButton5)
                 .addGap(2, 2, 2)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(rdbVentasCiudad)
-                    .addComponent(rdbClienteArticulo)
+                    .addComponent(rbVentasCiudad)
+                    .addComponent(rbClienteArticulo)
                     .addComponent(jLabel1))
                 .addGap(32, 32, 32)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -145,9 +161,9 @@ public class FrmReportesFacturacion extends javax.swing.JFrame {
                 .addComponent(btnConsultar)
                 .addGap(18, 18, 18)
                 .addComponent(btnImprimir)
-                .addGap(18, 18, 18)
+                .addGap(31, 31, 31)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 207, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(46, Short.MAX_VALUE))
+                .addContainerGap(244, Short.MAX_VALUE))
         );
 
         pack();
@@ -159,6 +175,298 @@ public class FrmReportesFacturacion extends javax.swing.JFrame {
         frm.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_jButton5ActionPerformed
+
+    private void btnConsultarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConsultarActionPerformed
+        // TODO add your handling code here:
+     
+  
+    if(txtFechaDesde.getText().trim().isEmpty()){
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Debe ingresar el año desde");
+
+        txtFechaDesde.requestFocus();
+
+        return;
+    }
+
+    if(txtFechaHasta.getText().trim().isEmpty()){
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Debe ingresar el año hasta");
+
+        txtFechaHasta.requestFocus();
+
+        return;
+    }
+
+    if(!rbVentasCiudad.isSelected()
+            && !rbClienteArticulo.isSelected()){
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Debe seleccionar un tipo de reporte");
+
+        return;
+    }
+
+    try{
+
+        int anioDesde =
+                Integer.parseInt(
+                        txtFechaDesde.getText());
+
+        int anioHasta =
+                Integer.parseInt(
+                        txtFechaHasta.getText());
+
+        ReporteDAO dao =
+                new ReporteDAO();
+
+        DefaultTableModel modelo =
+                new DefaultTableModel();
+
+        ResultSet rs;
+
+        if(rbVentasCiudad.isSelected()){
+
+            modelo.addColumn("Ciudad");
+            modelo.addColumn("Facturas");
+            modelo.addColumn("Total");
+
+            rs = dao.ventasPorCiudad(
+                    anioDesde,
+                    anioHasta);
+
+            if(!rs.next()){
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "No existen facturas entre los años "
+                        + anioDesde +
+                        " y " +
+                        anioHasta);
+
+                return;
+            }
+
+            do{
+
+                modelo.addRow(new Object[]{
+                    rs.getString("CIUDAD"),
+                    rs.getInt("FACTURAS"),
+                    rs.getDouble("TOTAL")
+                });
+
+            }while(rs.next());
+
+            tblReporte.setModel(modelo);
+        }
+
+        if(rbClienteArticulo.isSelected()){
+
+            ArrayList<String> clientes =
+                    new ArrayList<>();
+
+            modelo.addColumn("Articulo");
+
+            ResultSet rsClientes =
+                    dao.obtenerClientes();
+
+            while(rsClientes.next()){
+
+                String cliente =
+                        rsClientes.getString(
+                                "NOMBRE");
+
+                clientes.add(cliente);
+
+                modelo.addColumn(cliente);
+            }
+
+            ResultSet rsArticulos =
+                    dao.obtenerArticulos(
+                            anioDesde,
+                            anioHasta);
+
+            if(!rsArticulos.next()){
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "No existen registros entre los años "
+                        + anioDesde
+                        + " y "
+                        + anioHasta);
+
+                return;
+            }
+
+            do{
+
+                String articulo =
+                        rsArticulos.getString(
+                                "ARTICULO");
+
+                Object[] fila =
+                        new Object[
+                                clientes.size() + 1];
+
+                fila[0] = articulo;
+
+                for(int i = 0;
+                    i < clientes.size();
+                    i++){
+
+                    fila[i + 1] =
+                            dao.obtenerTotalClienteArticulo(
+                                    clientes.get(i),
+                                    articulo,
+                                    anioDesde,
+                                    anioHasta);
+                }
+
+                modelo.addRow(fila);
+
+            }while(rsArticulos.next());
+
+            tblReporte.setModel(modelo);
+        }
+
+        txtFechaDesde.setText("");
+        txtFechaHasta.setText("");
+
+        txtFechaDesde.requestFocus();
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Reporte generado correctamente");
+
+    }catch(NumberFormatException e){
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Los años deben ser numéricos");
+
+    }catch(Exception e){
+
+        JOptionPane.showMessageDialog(
+                this,
+                e.getMessage());
+    }
+    }//GEN-LAST:event_btnConsultarActionPerformed
+
+    private void btnImprimirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnImprimirActionPerformed
+        // TODO add your handling code here:
+       try{
+
+        if(tblReporte.getRowCount() == 0){
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Primero debe generar el reporte");
+
+            return;
+        }
+
+        String nombreArchivo = "";
+
+        if(rbVentasCiudad.isSelected()){
+
+            nombreArchivo =
+                    "ReporteVentasCiudad.pdf";
+        }
+
+        if(rbClienteArticulo.isSelected()){
+
+            nombreArchivo =
+                    "ReporteClienteArticulo.pdf";
+        }
+
+        Document documento =
+                new Document();
+
+        PdfWriter.getInstance(
+                documento,
+                new FileOutputStream(
+                        nombreArchivo));
+
+        documento.open();
+
+        documento.add(
+                new Paragraph(
+                        "SISTEMA DE FACTURACION"));
+
+        documento.add(
+                new Paragraph(
+                        " "));
+
+        if(rbVentasCiudad.isSelected()){
+
+            documento.add(
+                    new Paragraph(
+                            "REPORTE DE VENTAS POR CIUDAD"));
+        }
+
+        if(rbClienteArticulo.isSelected()){
+
+            documento.add(
+                    new Paragraph(
+                            "REPORTE CLIENTE - ARTICULO"));
+        }
+
+        documento.add(
+                new Paragraph(
+                        " "));
+
+        PdfPTable tabla =
+                new PdfPTable(
+                        tblReporte.getColumnCount());
+
+        for(int i = 0;
+            i < tblReporte.getColumnCount();
+            i++){
+
+            tabla.addCell(
+                    tblReporte.getColumnName(i));
+        }
+
+        for(int fila = 0;
+            fila < tblReporte.getRowCount();
+            fila++){
+
+            for(int columna = 0;
+                columna < tblReporte.getColumnCount();
+                columna++){
+
+                tabla.addCell(
+                        tblReporte
+                        .getValueAt(
+                                fila,
+                                columna)
+                        .toString());
+            }
+        }
+
+        documento.add(tabla);
+
+        documento.close();
+
+        JOptionPane.showMessageDialog(
+                this,
+                "PDF generado correctamente");
+
+        Desktop.getDesktop().open(
+                new File(nombreArchivo));
+
+    }catch(Exception e){
+
+        JOptionPane.showMessageDialog(
+                this,
+                e.getMessage());
+    }
+    }//GEN-LAST:event_btnImprimirActionPerformed
 
     /**
      * @param args the command line arguments
@@ -194,9 +502,9 @@ public class FrmReportesFacturacion extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JRadioButton rdbClienteArticulo;
-    private javax.swing.JRadioButton rdbVentasCiudad;
-    private javax.swing.JTable tblReportes;
+    private javax.swing.JRadioButton rbClienteArticulo;
+    private javax.swing.JRadioButton rbVentasCiudad;
+    private javax.swing.JTable tblReporte;
     private javax.swing.JTextField txtFechaDesde;
     private javax.swing.JTextField txtFechaHasta;
     // End of variables declaration//GEN-END:variables

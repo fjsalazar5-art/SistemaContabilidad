@@ -97,7 +97,7 @@ public class FrmCliente extends javax.swing.JFrame {
         btnModificar.addActionListener(this::btnModificarActionPerformed);
 
         btnBuscar.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        btnBuscar.setText("Buscar por RUC");
+        btnBuscar.setText("Buscar por NOMBRE");
         btnBuscar.addActionListener(this::btnBuscarActionPerformed);
 
         btnGuardar.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N

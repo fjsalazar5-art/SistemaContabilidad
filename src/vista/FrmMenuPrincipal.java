@@ -11,10 +11,9 @@ import vista.FrmPrincipal;
 import vista.facturacion.FrmCliente;
 import vista.facturacion.FrmCiudadEntrega;
 import vista.facturacion.FrmFactura;
-/**
- *
- * @author KEVIN
- */
+import vista.facturacion.FrmReportesFacturacion;
+import javax.swing.JOptionPane;
+
 public class FrmMenuPrincipal extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmMenuPrincipal.class.getName());
@@ -37,6 +36,7 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jLabel1 = new javax.swing.JLabel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
@@ -46,13 +46,18 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         jMenuItem3 = new javax.swing.JMenuItem();
         jMenuItem4 = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
+        jMenuItem6 = new javax.swing.JMenuItem();
         jMenu3 = new javax.swing.JMenu();
         jMenu4 = new javax.swing.JMenu();
         jMenu5 = new javax.swing.JMenu();
         jMenuItem5 = new javax.swing.JMenuItem();
         jMenu6 = new javax.swing.JMenu();
+        jMenuItem7 = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jLabel1.setFont(new java.awt.Font("Segoe UI Black", 1, 24)); // NOI18N
+        jLabel1.setText("SISTEMA EMPRESARIAL  / MENU PRINCIPAL ");
 
         jMenu1.setBackground(new java.awt.Color(204, 204, 255));
         jMenu1.setForeground(new java.awt.Color(51, 51, 51));
@@ -82,6 +87,10 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         jMenu2.add(jMenuItem4);
         jMenu2.add(jSeparator1);
 
+        jMenuItem6.setText("Reportes");
+        jMenuItem6.addActionListener(this::jMenuItem6ActionPerformed);
+        jMenu2.add(jMenuItem6);
+
         jMenuBar1.add(jMenu2);
 
         jMenu3.setText("Cuentas por Cobrar");
@@ -104,6 +113,12 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
 
         jMenu6.setText("Salir");
         jMenu6.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenu6.addActionListener(this::jMenu6ActionPerformed);
+
+        jMenuItem7.setText("Salir");
+        jMenuItem7.addActionListener(this::jMenuItem7ActionPerformed);
+        jMenu6.add(jMenuItem7);
+
         jMenuBar1.add(jMenu6);
 
         setJMenuBar(jMenuBar1);
@@ -112,11 +127,17 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 973, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(28, 28, 28)
+                .addComponent(jLabel1)
+                .addContainerGap(67, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 564, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(68, 68, 68)
+                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(93, Short.MAX_VALUE))
         );
 
         pack();
@@ -163,6 +184,34 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         this.dispose();
     }//GEN-LAST:event_jMenuItem5ActionPerformed
 
+    private void jMenuItem6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem6ActionPerformed
+        // TODO add your handling code here:
+        FrmReportesFacturacion frm = new FrmReportesFacturacion();
+        frm.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_jMenuItem6ActionPerformed
+
+    private void jMenu6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenu6ActionPerformed
+        // TODO add your handling code here:
+     
+    }//GEN-LAST:event_jMenu6ActionPerformed
+
+    private void jMenuItem7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem7ActionPerformed
+        // TODO add your handling code here:
+           
+    int opcion =
+            JOptionPane.showConfirmDialog(
+                    this,
+                    "¿Está seguro que desea salir?",
+                    "Confirmar salida",
+                    JOptionPane.YES_NO_OPTION);
+
+    if(opcion == JOptionPane.YES_OPTION){
+
+        dispose();
+    }
+    }//GEN-LAST:event_jMenuItem7ActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -189,6 +238,7 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;
@@ -201,6 +251,8 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JMenuItem jMenuItem5;
+    private javax.swing.JMenuItem jMenuItem6;
+    private javax.swing.JMenuItem jMenuItem7;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
     // End of variables declaration//GEN-END:variables

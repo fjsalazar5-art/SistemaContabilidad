@@ -24,7 +24,35 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
     public FrmMenuPrincipal() {
         initComponents();
         setLocationRelativeTo(null);
- 
+        agregarMenuBancos();
+    }
+
+    // ---------------- MODULO BANCOS (Francisco Guerron) ----------------
+    // Se agrega por codigo (fuera de initComponents) para que el editor
+    // visual de NetBeans no lo borre al regenerar el formulario.
+    // El menu principal queda abierto: al cerrar una pantalla de Bancos
+    // se vuelve a este menu.
+    private void agregarMenuBancos() {
+
+        agregarItemBancos("Tipo de Transacción", () -> new FrmTipoTransaccion());
+        agregarItemBancos("Cuenta Bancaria", () -> new FrmCuentaBancaria());
+        agregarItemBancos("Movimiento Bancario", () -> new FrmMovimientoBancario());
+        jMenu4.addSeparator();
+        agregarItemBancos("Reporte: Saldo por Cuenta", () -> new FrmReporteSaldoCuenta());
+        agregarItemBancos("Reporte: Movimientos por Fechas", () -> new FrmReporteMovimientosFechas());
+    }
+
+    private void agregarItemBancos(String texto,
+            java.util.function.Supplier<javax.swing.JFrame> pantalla) {
+
+        javax.swing.JMenuItem item = new javax.swing.JMenuItem(texto);
+        item.addActionListener(e -> {
+            javax.swing.JFrame frm = pantalla.get();
+            frm.setDefaultCloseOperation(javax.swing.JFrame.DISPOSE_ON_CLOSE);
+            frm.setLocationRelativeTo(this);
+            frm.setVisible(true);
+        });
+        jMenu4.add(item);
     }
 
     /**

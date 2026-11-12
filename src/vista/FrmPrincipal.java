@@ -16,7 +16,7 @@ public class FrmPrincipal extends JFrame {
     public FrmPrincipal() {
 
         setTitle("Sistema de Contabilidad");
-        setSize(600, 640);
+        setSize(600, 430);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
@@ -42,40 +42,6 @@ public class FrmPrincipal extends JFrame {
         panel.add(btnComprobante);
         panel.add(btnBalanceGeneral);
         panel.add(btnEstadoResultados);
-
-        // ---------------- MODULO BANCOS ----------------
-        JLabel lblBancos = new JLabel("MÓDULO BANCOS");
-        lblBancos.setFont(new Font("Arial", Font.BOLD, 16));
-        lblBancos.setHorizontalAlignment(SwingConstants.CENTER);
-        lblBancos.setBounds(80, 325, 440, 25);
-        panel.add(lblBancos);
-
-        JButton btnTipoTransaccion = crearBoton("Tipo Transacción", 80, 360);
-        JButton btnCuentaBancaria = crearBoton("Cuenta Bancaria", 320, 360);
-        JButton btnMovimientoBancario = crearBoton("Movimiento Bancario", 80, 420);
-        JButton btnSaldoCuenta = crearBoton("Rep. Saldo por Cuenta", 320, 420);
-        JButton btnMovFechas = crearBoton("Rep. Movimientos Fechas", 200, 480);
-
-        panel.add(btnTipoTransaccion);
-        panel.add(btnCuentaBancaria);
-        panel.add(btnMovimientoBancario);
-        panel.add(btnSaldoCuenta);
-        panel.add(btnMovFechas);
-
-        btnTipoTransaccion.addActionListener(e ->
-                abrirVentana(new FrmTipoTransaccion()));
-
-        btnCuentaBancaria.addActionListener(e ->
-                abrirVentana(new FrmCuentaBancaria()));
-
-        btnMovimientoBancario.addActionListener(e ->
-                abrirVentana(new FrmMovimientoBancario()));
-
-        btnSaldoCuenta.addActionListener(e ->
-                abrirVentana(new FrmReporteSaldoCuenta()));
-
-        btnMovFechas.addActionListener(e ->
-                abrirVentana(new FrmReporteMovimientosFechas()));
 
         btnTipoCuenta.addActionListener(e ->
                 abrirVentana(new FrmTipoCuenta()));

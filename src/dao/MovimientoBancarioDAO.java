@@ -123,16 +123,24 @@ public class MovimientoBancarioDAO {
             WHERE UPPER(C.DESCRIPCION) LIKE UPPER(?)
                OR UPPER(C.NUMERO_CUENTA) LIKE UPPER(?)
                OR UPPER(M.DESCRIPCION) LIKE UPPER(?)
-            ORDER BY M.ID_MOVIMIENTO DESC
+            ORDER BY CASE
+                       WHEN UPPER(C.DESCRIPCION) = UPPER(?) THEN 0
+                       WHEN UPPER(C.DESCRIPCION) LIKE UPPER(?) THEN 1
+                       ELSE 2
+                     END,
+                     M.ID_MOVIMIENTO DESC
             """;
 
         try (Connection con = Conexion.conectar();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            String patron = "%" + texto.trim() + "%";
+            String t = texto.trim();
+            String patron = "%" + t + "%";
             ps.setString(1, patron);
             ps.setString(2, patron);
             ps.setString(3, patron);
+            ps.setString(4, t);
+            ps.setString(5, "% " + t);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {

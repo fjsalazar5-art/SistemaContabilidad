@@ -86,13 +86,22 @@ public class TipoTransaccionDAO {
             SELECT ID_TIPO_TRANSACCION, NOMBRE, SIGNO
             FROM TIPO_TRANSACCION
             WHERE UPPER(NOMBRE) LIKE UPPER(?)
-            ORDER BY ID_TIPO_TRANSACCION
+            ORDER BY CASE
+                       WHEN UPPER(NOMBRE) = UPPER(?) THEN 0
+                       WHEN UPPER(NOMBRE) LIKE UPPER(?) THEN 1
+                       ELSE 2
+                     END,
+                     ID_TIPO_TRANSACCION
             """;
 
         try (Connection con = Conexion.conectar();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setString(1, "%" + nombre.trim() + "%");
+            // Prioridad: nombre exacto, luego nombre que TERMINA en el texto
+            String t = nombre.trim();
+            ps.setString(1, "%" + t + "%");
+            ps.setString(2, t);
+            ps.setString(3, "% " + t);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {

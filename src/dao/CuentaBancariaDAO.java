@@ -89,16 +89,27 @@ public class CuentaBancariaDAO {
             WHERE UPPER(NUMERO_CUENTA) LIKE UPPER(?)
                OR UPPER(DESCRIPCION) LIKE UPPER(?)
                OR UPPER(CLIENTE) LIKE UPPER(?)
-            ORDER BY ID_CUENTA_BANCO
+            ORDER BY CASE
+                       WHEN UPPER(DESCRIPCION) = UPPER(?) OR UPPER(NUMERO_CUENTA) = UPPER(?) THEN 0
+                       WHEN UPPER(DESCRIPCION) LIKE UPPER(?) THEN 1
+                       ELSE 2
+                     END,
+                     ID_CUENTA_BANCO
             """;
 
         try (Connection con = Conexion.conectar();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            String patron = "%" + texto.trim() + "%";
+            // Prioridad: nombre exacto, luego nombre que TERMINA en el texto
+            // (buscar "B" encuentra "Cuenta Bancaria B" y no "Cuenta Bancaria X")
+            String t = texto.trim();
+            String patron = "%" + t + "%";
             ps.setString(1, patron);
             ps.setString(2, patron);
             ps.setString(3, patron);
+            ps.setString(4, t);
+            ps.setString(5, t);
+            ps.setString(6, "% " + t);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {

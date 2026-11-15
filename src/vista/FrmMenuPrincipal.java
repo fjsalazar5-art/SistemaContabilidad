@@ -25,6 +25,32 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         initComponents();
         setLocationRelativeTo(null);
         agregarMenuBancos();
+        agregarMenuCxc();
+    }
+
+    // ---------------- CUENTAS POR COBRAR (Alejandro Simba) ----------------
+    // Fuera del codigo generado por NetBeans. Sin alterar Bancos/Facturacion.
+    private void agregarMenuCxc() {
+        cxc.servidor.ServidorCxc.iniciarEnSegundoPlano();
+        agregarOpcionCxc("Cobradores", () -> new ec.edu.espe.appdistclient.interfaz.cuentasporcobrar.CobradorView());
+        agregarOpcionCxc("Formas de pago", () -> new ec.edu.espe.appdistclient.interfaz.cuentasporcobrar.FormaPagoView());
+        agregarOpcionCxc("Pago de facturas", () -> new ec.edu.espe.appdistclient.interfaz.cuentasporcobrar.PagoFacturasView());
+        jMenu3.addSeparator();
+        agregarOpcionCxc("Reporte: Estado de cuenta cliente", () -> new ec.edu.espe.appdistclient.interfaz.cuentasporcobrar.ReporteCxcView(false));
+        agregarOpcionCxc("Reporte: Cobros por cobrador", () -> new ec.edu.espe.appdistclient.interfaz.cuentasporcobrar.ReporteCxcView(true));
+        jMenu3.addSeparator();
+        agregarOpcionCxc("Verificación integración Facturación", () -> new ec.edu.espe.appdistclient.interfaz.cuentasporcobrar.IntegracionCxcView());
+    }
+
+    private void agregarOpcionCxc(String texto, java.util.function.Supplier<javax.swing.JFrame> ventana) {
+        javax.swing.JMenuItem item = new javax.swing.JMenuItem(texto);
+        item.addActionListener(e -> {
+            javax.swing.JFrame frm = ventana.get();
+            frm.setDefaultCloseOperation(javax.swing.JFrame.DISPOSE_ON_CLOSE);
+            frm.setLocationRelativeTo(this);
+            frm.setVisible(true);
+        });
+        jMenu3.add(item);
     }
 
     // ---------------- MODULO BANCOS (Francisco Guerron) ----------------
